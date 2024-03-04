@@ -10,6 +10,7 @@ import {
 import axios from 'axios';
 import { valueTypeFormat } from '../utils';
 import { SERVICE_LOCAL_HOST } from '@fastgpt/service/common/system/tools';
+import { addLog } from '@fastgpt/service/common/system/log';
 
 type PropsArrType = {
   key: string;
@@ -130,6 +131,7 @@ export const dispatchHttp468Request = async (props: HttpRequestProps): Promise<H
       ...results
     };
   } catch (error) {
+    addLog.error('Http request error', error);
     return {
       [ModuleOutputKeyEnum.failed]: true,
       [ModuleOutputKeyEnum.responseData]: {
@@ -137,7 +139,7 @@ export const dispatchHttp468Request = async (props: HttpRequestProps): Promise<H
         params: Object.keys(params).length > 0 ? params : undefined,
         body: Object.keys(requestBody).length > 0 ? requestBody : undefined,
         headers: Object.keys(headers).length > 0 ? headers : undefined,
-        httpResult: { error }
+        httpResult: { error: formatHttpError(error) }
       }
     };
   }
@@ -278,4 +280,15 @@ function removeUndefinedSign(obj: Record<string, any>) {
     }
   }
   return obj;
+}
+function formatHttpError(error: any) {
+  return {
+    message: error?.message,
+    name: error?.name,
+    method: error?.config?.method,
+    baseURL: error?.config?.baseURL,
+    url: error?.config?.url,
+    code: error?.code,
+    status: error?.status
+  };
 }
